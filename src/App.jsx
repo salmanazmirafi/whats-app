@@ -1,22 +1,22 @@
 import SignUp from "./components/signup/SignUp";
-import Home from "./Home";
 import "react-toastify/dist/ReactToastify.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import "./App.css";
+import Header from "./components/common/Header/Header";
+import Footer from "./components/common/footer/Footer";
+import Homepages from "./components/home/Homepages";
+import SinglePage from "./components/singlePage/SinglePage";
+import Culture from "./components/culture/Culture";
 
 function App() {
   const Layout = () => {
     return (
       <div>
-        {/* <Navbar />
-        <div style={{ display: "flex" }}>
-          <LeftBar />
-          <div style={{ flex: 6 }}>
-            
-          </div>
-          <RightBar />
-        </div> */}
-        <Outlet />
+        <Header />
+        <div>
+          <Outlet />
+        </div>
+        <Footer />
       </div>
     );
   };
@@ -33,7 +33,15 @@ function App() {
       children: [
         {
           path: "/",
-          element: <Home />,
+          element: <Homepages />,
+        },
+        {
+          path: "/singlepage/:id",
+          element: <SinglePage />,
+        },
+        {
+          path: "/culture",
+          element: <Culture />,
         },
       ],
     },
