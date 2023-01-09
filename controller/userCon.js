@@ -47,7 +47,7 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
 });
 
 // Logout User
-exports.logOut = catchAsyncErrors(async (req, res, _next) => {
+exports.logOut = catchAsyncErrors(async (_req, res, _next) => {
   res.cookie("token", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
@@ -61,7 +61,7 @@ exports.userDetails = catchAsyncErrors(async (req, res, next) => {
 
   try {
     const user = await User.findById(userId);
-    if (!user) return next(new ErrorHandler("User Not Found"));
+    if (!user) return next(new ErrorHandler("User Not Found", 400));
     res.status(200).json(user);
   } catch (err) {
     next(new ErrorHandler(err));
@@ -75,7 +75,7 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
 
   try {
     const users = await User.findOne({ email });
-    if (!user) return next(new ErrorHandler("Have a Already email"));
+    if (!user) return next(new ErrorHandler("Have a Already email", 404));
 
     const newD = await User.findByIdAndUpdate(
       user,
@@ -91,6 +91,11 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
     next(new ErrorHandler(err));
   }
 });
+
+// Forgot Password
+// TODO:
+// Change Password
+
 // Delete User Info
 exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   try {
@@ -102,7 +107,66 @@ exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
 });
 
 //-------------------Admin----------------
+// Admin Login
+
+exports.adminLogin = catchAsyncErrors(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  // checking if user has given password and email both
+  if (!email || !password) return next(new ErrorHandler("Invalid Data", 404));
+
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) return next(new ErrorHandler("Invalid email or password", 404));
+
+  const isPasswordMatched = await user.comparePassword(password);
+
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("Invalid email or password", 404));
+  }
+
+  sendToken(user, 200, res);
+});
+
 // All User
+exports.finAll = catchAsyncErrors(async (_req, res, next) => {
+  try {
+    const user = await User.find();
+    res.status(200).json(user);
+  } catch (err) {
+    next(new ErrorHandler(err));
+  }
+});
 // User Details
+exports.singleUser = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return next(new ErrorHandler("User Not Found", 401));
+    res.status(200).json(user);
+  } catch (err) {
+    next(new ErrorHandler(err));
+  }
+});
 // Change User Roulers
+exports.roulersChange = catchAsyncErrors(async (req, res, next) => {
+  const { role } = req.body;
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true, runValidators: true, useFindAndModify: true }
+    );
+    res.status(200).json(user);
+  } catch (err) {
+    next(new ErrorHandler(err));
+  }
+});
 // Delete User Info
+exports.userDelete = catchAsyncErrors(async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndRemove(req.params.id);
+    if (!user) return next(new ErrorHandler("User Not Found"));
+    res.status(203).json({ message: "User Delete" });
+  } catch (err) {
+    next(new ErrorHandler(err));
+  }
+});
